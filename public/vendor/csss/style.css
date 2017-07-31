@@ -1,0 +1,40 @@
+.chatBox{
+    background:#DCDCDC;
+    width: 400px;
+    height: 500px;
+    border: 2px solid  #ddd;
+}
+
+#displayText{
+    background-color: lightgrey;
+    width: 300px;
+    height: 300px;
+    border: 10px solid green;
+    padding: 25px;
+    border-radius: 10px;
+    overflow:auto;
+}
+
+#sendMessage{
+    margin-left: 50px;
+    position:relative;
+}
+
+#send{
+    background-color: #FFE4C4;
+    border:none;
+    border-radius: 25px;
+    color: #D2691E;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+}
+#send:hover{
+    background:#DEB887;
+}
+
+*{
+    box-sizing:border-box;
+}

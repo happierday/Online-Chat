@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "chat-600bc",
+    "staging": "chat-staging-1a064",
+    "main": "chat-600bc"
+  }
+}

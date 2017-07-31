@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Welcome to Chat Room</title>
+         <link rel="stylesheet" type="text/css" href="./vendor/csss/style.css">
+        <script type = "text/javascript" src="https://www.gstatic.com/firebasejs/4.2.0/firebase.js"></script>
+        <script src="https://rawgit.com/riot/riot/master/riot%2Bcompiler.min.js"></script>
+        <script src="https://rawgit.com/riot/route/master/dist/route.min.js"></script>
+        
+    </head>
+        
+        <main></main>
+        <div class = "chatBox">
+            <div class = "chatTitle">
+                <h1>Welcome to this chat</h1>
+            </div>    
+            <div>
+                <p id = "displayText"></p>
+                <form id = "sendMessage">  
+                    <input id = "chatMessage" type = "text" placeholder="type your message">
+                    <button  id = "sendButton" type = "submit" onclick="send()">send</button>
+                <form>
+            </div>
+        </div>
+        <script type="riot/tag" src = "./component/main.tag"></script>
+        <script>
+            
+            let historyMessage = new Map();
+
+            let config = {
+                    apiKey: "AIzaSyCWdc5Q191idrN-TuzvfiwI0m34Rh1pv_U",
+                    authDomain: "chat-600bc.firebaseapp.com",
+                    databaseURL: "https://chat-600bc.firebaseio.com",
+                    projectId: "chat-600bc",
+                    storageBucket: "",
+                    messagingSenderId: "962409650011"
+                };
+                firebase.initializeApp(config);
+
+            route.start(true);
+            route.base('#');
+            
+            
+
+            // let counter = firebase.database().ref('counter');
+            // counter.set({
+            //     value:1
+            // })
+
+            let displayText = document.getElementById('displayText');
+            let sendMessage = document.getElementById('sendMessage');
+            
+            let displayHistory = false;
+            
+            sendMessage.addEventListener('submit',(e)=>{
+                displayHistory = false;
+                e.preventDefault();
+                let key = e.which || e.keyCode;
+                if(key === 13){    
+                    send();
+                }
+            },false);
+
+            
+            if(sessionStorage.key(0)!=null){
+                displayHistory = true;
+                let i = 0;
+                while(sessionStorage.key(i)!=null){
+                    let key = sessionStorage.key(i);
+                    displayText.appendChild(document.createTextNode(key.slice(25,key.length) + " :  " +sessionStorage.getItem(key)));
+                    displayText.appendChild(document.createElement("br")); 
+                    ++i;
+                }
+                sessionStorage.clear();
+            }
+            
+
+            route('/',()=>{
+                riot.mount('main',{user:localStorage.getItem(0)});
+            })
+
+            function login(){
+                let provider = new firebase.auth.GoogleAuthProvider();
+                firebase.auth().signInWithPopup(provider).then((result)=>{
+                    let currentUser = firebase.auth().currentUser.displayName;
+                    let user = result.user;
+                    let username = user.displayName.toLowerCase();
+                    localStorage.setItem(0,user.displayName);
+                    //sessionStorage.setItem(0,username);
+                    let db = firebase.database().ref('user');
+                    db.once('value',(snap)=>{
+                        try{
+                            snap.forEach(function(element){
+                                //sessionStorage.setItem(element.val().username,"");
+                                if(element.val().email == user.email){
+                                    throw BreakException
+                                }           
+                            })
+                            db.push({
+                                email:user.email,
+                                username:username,
+                            })    
+                        }catch(e){
+
+                        }
+                    })
+                    let dbroom = firebase.database().ref('room');
+                    //console.log(sessionStorage.getItem(0));
+                    dbroom.once('value',(snap)=>{
+                        try{
+                            snap.forEach(function(element){
+                                if(element.val().username == currentUser){
+                                    throw BreakException
+                                }           
+                            })
+                            dbroom.push({
+                                username:currentUser
+                            })    
+                        }catch(e){
+                            
+                        }
+                        riot.mount('main',{user:currentUser});       
+                    })
+                })
+
+            }
+            function signout(){
+                localStorage.clear();
+                firebase.auth().signOut();
+                location.href = "";
+            }
+            firebase.auth().onAuthStateChanged((user)=>{
+                if(user){
+                }else{
+                    console.log("not log in");
+                }
+            })
+
+            function send(){
+                console.log(displayText.scrollTop);
+                console.log(displayText.clientHeight);
+                displayText.scrollTop =  displayText.scrollTop + displayText.clientHeight;
+                displayHistory = false;
+                if(firebase.auth().currentUser==null){
+                    alert("Please Log In first");
+                }else{
+                    let counter = firebase.database().ref('counter');
+                    let user = firebase.auth().currentUser.displayName;
+                    let userMessage = document.getElementById('chatMessage')
+                    let history = firebase.database().ref('history');
+                    history.push({
+                        user: Date().substr(0,25) + user,
+                        message:userMessage.value
+                    })
+                    userMessage.value = null;
+                }
+                
+            }
+            
+            let history = firebase.database().ref('history');
+            history.on('value',(snap)=>{
+                //console.log(displayHistory);
+                snap.forEach((element)=>{
+                    historyMessage.set(element.val().user,element.val().message);
+                    sessionStorage.setItem(element.val().user,element.val().message);
+                })
+                if(historyMessage.size!=0){
+                    let array = Array.from(historyMessage)[historyMessage.size-1];
+                    if(!displayHistory){
+                        displayText.appendChild(document.createTextNode(array[0].slice(25,array[0].length) + " :  " +array[1] + ""));
+                        displayText.appendChild(document.createElement("br")); 
+                    }
+                }
+            })
+    </script>
+    </body>
+</html>
