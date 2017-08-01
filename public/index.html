@@ -32,7 +32,10 @@
         </div>
         
         <script>
+            //this map will store all the messages
             let historyMessage = new Map();
+
+            //set up firebase connection
             let config = {
                     apiKey: "AIzaSyCWdc5Q191idrN-TuzvfiwI0m34Rh1pv_U",
                     authDomain: "chat-600bc.firebaseapp.com",
@@ -42,19 +45,23 @@
                     messagingSenderId: "962409650011"
                 };
                 firebase.initializeApp(config);
-
-
-
             
-            let displayText = document.getElementById('displayText');
-            let loginButton = document.getElementById('loginButton');
-            let welcome = document.getElementById('welcome');
-            let welcomeUser = document.getElementById('welcomeUser');
-            let chatMessage = document.getElementById('chatMessage')
+            //get all the dummy nodes from html
+            const displayText = document.getElementById('displayText');
+            const loginButton = document.getElementById('loginButton');
+            const welcome = document.getElementById('welcome');
+            const welcomeUser = document.getElementById('welcomeUser');
+            const chatMessage = document.getElementById('chatMessage')
 
-            let history = firebase.database().ref('history');
-            
-            
+            //firebase reference nodes
+            const history = firebase.database().ref('history');
+            const dbUser = firebase.database().ref('user');
+            const dbroom = firebase.database().ref('room');
+
+            /*Message listener:
+            will disable the newline with enter event in textarea
+            will enable enter event to send message
+            */    
             chatMessage.addEventListener('keydown',(e)=>{
                 if(e.which === 13){
                     e.preventDefault();
@@ -62,6 +69,10 @@
                 }
             });
 
+            /*Login funtion: this function will handle google authentication
+            then push the user data into firebase with only display name and
+            email
+            */
             function login(){
                 let provider = new firebase.auth.GoogleAuthProvider();
                 firebase.auth().signInWithPopup(provider).then((result)=>{
@@ -69,22 +80,25 @@
                     loginButton.setAttribute("style","display:none");
                     let username = user.displayName;
                     localStorage.setItem(0,username);
-                    let db = firebase.database().ref('user');
-                    db.once('value',(snap)=>{
+                    
+                    dbUser.once('value',(snap)=>{
+                        //try block will test whether user account already exists
                         try{
                             snap.forEach(function(element){
                                 if(element.val().email == user.email){
                                     throw BreakException
                                 }           
                             })
-                            db.push({
+                            //if it doesn't, add to firebase
+                            dbUser.push({
                                 email:user.email,
                                 username:username,
                             })    
                         }catch(e){
                         }
                     })
-                    let dbroom = firebase.database().ref('room');
+                    
+                    //dbRoom will show how many people are in the room
                     dbroom.once('value',(snap)=>{
                         try{
                             snap.forEach(function(element){
@@ -104,12 +118,14 @@
                 
             }
 
+            //signout function:  when active, will clear the storage
             function signout(){
                 localStorage.clear();
                 firebase.auth().signOut();
                 location.reload();  
             }
 
+            //change the  display of webpage depends on the status of user
             firebase.auth().onAuthStateChanged((user)=>{
                 if(user){
                     welcome.setAttribute('style',"display:none");
@@ -123,6 +139,10 @@
                     welcome.setAttribute('style',"display:block");
                 }
             })
+
+            /*send function will capture the message user entered with username
+            and add them to firebase, will not perfom displaying message
+            */
             function send(){
                 if(firebase.auth().currentUser==null){
                     alert("Please Log In first");
@@ -135,25 +155,42 @@
                     chatMessage.value = null;
                 }   
             }
+
+            //on the first loal/refresh, this variable will help web to load history only once
             let displayHistory = true;
-            
+
+            /*this history listener will perform display message/history
+            every time when send function push something to firebase, this
+            listener will fire up and output last message
+            */
             history.on('value',(snap)=>{
+                //store all the messages
+                //since each on value event will loop through all entry in that reference
+                //so store them and output the last one
                 snap.forEach((element)=>{
                     historyMessage.set(element.val().user,element.val().message);
                 })
                 if(historyMessage.size!=0){
                     if(!displayHistory){
+                        //if displayHistory is false, that mean only output last message
                         let array = Array.from(historyMessage)[historyMessage.size-1];
                         displayMessage(array);
                     }else{
+                        //else if displayHistory is true, display all messages in historyMessage map
                         for(var i = 0; i<historyMessage.size;++i){
                             let array = Array.from(historyMessage)[i];
                             displayMessage(array);
                         }
+                        //only finish display history, set displayHistory to false because only output
+                        //history once
                         displayHistory = false;;
                     }
                 }
+                /*this interval will update the scroll position in the displayText
+                so that the scroll will always keep at very button
+                */
                 let add  = setInterval(()=>{
+                    //this event function will disable interval when user scroll the mouse wheel 
                     displayText.addEventListener('wheel',()=>{
                         clearInterval(add);
                     })
