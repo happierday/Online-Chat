@@ -1,0 +1,79 @@
+body{
+    background-image: url("image.jpg");
+}
+.chatBox{  
+    background:#AFEEEE;
+    width: 600px;
+    height: 600px;
+    border: 2px solid  #AFEEEE;
+    border-radius:20px;
+    margin:auto;
+}
+
+#displayText{
+    background-color: white;
+    width: 500px;
+    height: 400px;
+    border: 10px solid 	#1E90FF;
+    margin:auto;
+    border-radius: 10px;
+    overflow:auto;
+    font-size: 16px;
+}
+
+#chatTitle{
+    margin:0  auto;
+}
+
+#chatMessage{
+    border-radius: 5px;
+    height:40px;
+    width:430px;
+    font-size:16px;
+    margin-left:50px;
+}
+
+#welcomeUser{
+    display:none;
+}
+
+#chat,#loginButton,#signoutButton{
+    background-color:#00FFFF;
+    border-radius:30 px;
+    border:none;
+    border-radius: 25px;
+    color: #D2691E;
+    padding: 10px 20px;
+    text-align: center;
+    font-size: 16px;
+    color:#2F4F4F;
+}
+
+#chat{
+    position: relative;
+    cursor: not-allowed;
+}
+
+#loginButton:hover{
+    background-color:#1E90FF;
+}
+
+#signoutButton:hover{
+    background-color:#1E90FF;
+}
+
+#sendButton:hover{
+    background-color:#1E90FF;
+}
+
+#sendButton{
+    background-color:#00FFFF;
+    border-radius: 10px;
+    width:60px;
+    height:45px;
+    position:absolute;
+}
+
+#welcome{
+    text-align:center;
+}

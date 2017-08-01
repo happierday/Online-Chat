@@ -4,33 +4,35 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Welcome to Chat Room</title>
-         <link rel="stylesheet" type="text/css" href="./vendor/csss/style.css">
-        <script type = "text/javascript" src="https://www.gstatic.com/firebasejs/4.2.0/firebase.js"></script>
-        <script src="https://rawgit.com/riot/riot/master/riot%2Bcompiler.min.js"></script>
-        <script src="https://rawgit.com/riot/route/master/dist/route.min.js"></script>
-        
+        <link rel="stylesheet" type="text/css" href="./vendor/css/style.css">
+        <script type = "text/javascript" src="https://www.gstatic.com/firebasejs/4.2.0/firebase.js"></script>    
     </head>
-    <body>    
-        <main></main>
-        
+    <body>
+        <center>    
+        <button id = "chat">chat</button>
+        <div id="top">
+            <button id = "loginButton" onclick="login()">login</button>
+            <button id = "signoutButton" onclick= "signout()">signout</button>   
+        </div>
+        </center>
         <div class = "chatBox">
+            <center>
             <div class = "chatTitle">
                 <h1 id = "welcome">Welcome to this chat</h1>
-            </div>    
+                <h1 id = "welcomeUser">Welcome</h1>
+            </div>  
+            </center>  
             <div>
-                <p id = "displayText"></p>
-                <form id = "sendMessage">  
-                    <input id = "chatMessage" type = "text" placeholder="type your message">
+                <div id = "displayText"></div>
+                <div id = "sendMessage">  
+                    <textarea id = "chatMessage" type = "text" placeholder="type your message"></textarea>
                     <button  id = "sendButton" type = "submit" onclick="send()">send</button>
-                <form>
+                <div>
             </div>
         </div>
         
-        <script type="riot/tag" src = "./component/main.tag"></script>
         <script>
-            
             let historyMessage = new Map();
-
             let config = {
                     apiKey: "AIzaSyCWdc5Q191idrN-TuzvfiwI0m34Rh1pv_U",
                     authDomain: "chat-600bc.firebaseapp.com",
@@ -41,16 +43,15 @@
                 };
                 firebase.initializeApp(config);
 
-            route.start(true);
-            route.base('#');
-            
+            let history = firebase.database().ref('history');
             let displayText = document.getElementById('displayText');
             let sendMessage = document.getElementById('sendMessage');
-            
-            let displayHistory = false;
-            
+            let userDisplay = document.getElementById('username');
+            let loginButton = document.getElementById('loginButton');
+            let welcome = document.getElementById('welcome');
+            let welcomeUser = document.getElementById('welcomeUser');
+
             sendMessage.addEventListener('submit',(e)=>{
-                displayHistory = false;
                 e.preventDefault();
                 let key = e.which || e.keyCode;
                 if(key === 13){    
@@ -58,37 +59,17 @@
                 }
             },false);
 
-            
-            if(sessionStorage.key(0)!=null){
-                displayHistory = true;
-                let i = 0;
-                while(sessionStorage.key(i)!=null){
-                    let key = sessionStorage.key(i);
-                    displayText.appendChild(document.createTextNode(key.slice(25,key.length) + " :  " +sessionStorage.getItem(key)));
-                    displayText.appendChild(document.createElement("br")); 
-                    ++i;
-                }
-                sessionStorage.clear();
-            }
-            
-
-            route('/',()=>{
-                riot.mount('main',{user:localStorage.getItem(0)});
-            })
-
             function login(){
                 let provider = new firebase.auth.GoogleAuthProvider();
                 firebase.auth().signInWithPopup(provider).then((result)=>{
-                    let currentUser = firebase.auth().currentUser.displayName;
                     let user = result.user;
-                    let username = user.displayName.toLowerCase();
-                    localStorage.setItem(0,user.displayName);
-                    //sessionStorage.setItem(0,username);
+                    loginButton.setAttribute("style","display:none");
+                    let username = user.displayName;
+                    sessionStorage.setItem(0,username);
                     let db = firebase.database().ref('user');
                     db.once('value',(snap)=>{
                         try{
                             snap.forEach(function(element){
-                                //sessionStorage.setItem(element.val().username,"");
                                 if(element.val().email == user.email){
                                     throw BreakException
                                 }           
@@ -98,91 +79,88 @@
                                 username:username,
                             })    
                         }catch(e){
-
                         }
                     })
                     let dbroom = firebase.database().ref('room');
-                    //console.log(sessionStorage.getItem(0));
                     dbroom.once('value',(snap)=>{
                         try{
                             snap.forEach(function(element){
-                                if(element.val().username == currentUser){
+                                if(element.val().username == user){
                                     throw BreakException
                                 }           
                             })
                             dbroom.push({
-                                username:currentUser
+                                username:user
                             })    
                         }catch(e){
                             
-                        }
-                        riot.mount('main',{user:currentUser});       
+                        }      
                     })
+                    location.reload();
                 })
+                
+            }
 
-            }
             function signout(){
-                localStorage.clear();
+                sessionStorage.clear();
                 firebase.auth().signOut();
-                location.href = "";
+                location.reload();  
             }
+
             firebase.auth().onAuthStateChanged((user)=>{
                 if(user){
+                    welcome.setAttribute('style',"display:none");
+                    welcomeUser.setAttribute("style","display:block");
+                    welcomeUser.appendChild(document.createTextNode(" " + firebase.auth().currentUser.displayName));
+                    loginButton.setAttribute("style","display:none");
                 }else{
-                    console.log("not log in");
+                    loginButton.setAttribute("style","display:block");
+                    welcomeUser.setAttribute("style","display:none");
+                    welcomeUser.removeChild(welcomeUser.childNodes[0]);
+                    welcome.setAttribute('style',"display:block");
                 }
             })
-
             function send(){
-                console.log(displayText.scrollTop);
-                console.log(displayText.clientHeight);
-                displayText.scrollTop =  displayText.scrollTop + displayText.clientHeight;
-                displayHistory = false;
                 if(firebase.auth().currentUser==null){
                     alert("Please Log In first");
                 }else{
-                    let counter = firebase.database().ref('counter');
                     let user = firebase.auth().currentUser.displayName;
                     let userMessage = document.getElementById('chatMessage')
-                    let history = firebase.database().ref('history');
                     history.push({
                         user: Date().substr(0,25) + user,
                         message:userMessage.value
                     })
                     userMessage.value = null;
-                }
-                
+                }   
             }
-            //let toggler = true;
-            let history = firebase.database().ref('history');
+            let displayHistory = true;
             history.on('value',(snap)=>{
-                //console.log(displayHistory);
                 snap.forEach((element)=>{
                     historyMessage.set(element.val().user,element.val().message);
-                    sessionStorage.setItem(element.val().user,element.val().message);
                 })
                 if(historyMessage.size!=0){
-                    let array = Array.from(historyMessage)[historyMessage.size-1];
                     if(!displayHistory){
-                        
-                        let user = array[0].slice(25,array[0].length);
-
-                        let message = document.createElement("div");
-
-                        message.appendChild(document.createTextNode(user + " :  " +array[1]));
-
-                        if(user == localStorage.getItem(0)){
-                            message.setAttribute("style","float:right");
-                        }else{
-                            message.setAttribute("style","float:left");
+                        let array = Array.from(historyMessage)[historyMessage.size-1];
+                        displayMessage(array);
+                    }else{
+                        for(var i = 0; i<historyMessage.size;++i){
+                            let array = Array.from(historyMessage)[i];
+                            displayMessage(array);
                         }
-
-                        //console.log(message);
-                        displayText.appendChild(message);
-                        displayText.appendChild(document.createElement("br")); 
+                        displayHistory = false;;
                     }
                 }
+                let add  = setInterval(()=>{
+                    displayText.addEventListener('wheel',()=>{
+                        clearInterval(add);
+                    })
+                    let isScrollDown = displayText.scrollHeight - displayText.clientHeight <= displayText.scrollTop + 1;
+                    if(!isScrollDown){
+                        displayText.scrollTop = displayText.scrollHeight - displayText.clientHeight;
+                    }
+                },100)
             })
-    </script>
+</script>
+<script src = "./vendor/js/displayMessage.js"></script>
     </body>
 </html>
