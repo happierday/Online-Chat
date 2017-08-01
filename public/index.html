@@ -43,21 +43,24 @@
                 };
                 firebase.initializeApp(config);
 
-            let history = firebase.database().ref('history');
+
+
+            
             let displayText = document.getElementById('displayText');
-            let sendMessage = document.getElementById('sendMessage');
-            let userDisplay = document.getElementById('username');
             let loginButton = document.getElementById('loginButton');
             let welcome = document.getElementById('welcome');
             let welcomeUser = document.getElementById('welcomeUser');
+            let chatMessage = document.getElementById('chatMessage')
 
-            sendMessage.addEventListener('submit',(e)=>{
-                e.preventDefault();
-                let key = e.which || e.keyCode;
-                if(key === 13){    
+            let history = firebase.database().ref('history');
+            
+            
+            chatMessage.addEventListener('keydown',(e)=>{
+                if(e.which === 13){
+                    e.preventDefault();
                     send();
                 }
-            },false);
+            });
 
             function login(){
                 let provider = new firebase.auth.GoogleAuthProvider();
@@ -65,7 +68,7 @@
                     let user = result.user;
                     loginButton.setAttribute("style","display:none");
                     let username = user.displayName;
-                    sessionStorage.setItem(0,username);
+                    localStorage.setItem(0,username);
                     let db = firebase.database().ref('user');
                     db.once('value',(snap)=>{
                         try{
@@ -102,7 +105,7 @@
             }
 
             function signout(){
-                sessionStorage.clear();
+                localStorage.clear();
                 firebase.auth().signOut();
                 location.reload();  
             }
@@ -125,15 +128,15 @@
                     alert("Please Log In first");
                 }else{
                     let user = firebase.auth().currentUser.displayName;
-                    let userMessage = document.getElementById('chatMessage')
                     history.push({
                         user: Date().substr(0,25) + user,
-                        message:userMessage.value
+                        message:chatMessage.value
                     })
-                    userMessage.value = null;
+                    chatMessage.value = null;
                 }   
             }
             let displayHistory = true;
+            
             history.on('value',(snap)=>{
                 snap.forEach((element)=>{
                     historyMessage.set(element.val().user,element.val().message);
@@ -158,7 +161,7 @@
                     if(!isScrollDown){
                         displayText.scrollTop = displayText.scrollHeight - displayText.clientHeight;
                     }
-                },100)
+                },10)
             })
 </script>
 <script src = "./vendor/js/displayMessage.js"></script>
