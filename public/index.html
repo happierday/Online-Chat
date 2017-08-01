@@ -9,18 +9,18 @@
     </head>
     <body>
         <center>    
-        <button id = "chat">chat</button>
-        <div id="top">
-            <button id = "loginButton" onclick="login()">login</button>
-            <button id = "signoutButton" onclick= "signout()">signout</button>   
-        </div>
+            <button id = "chat">chat</button>
+            <div id="top">
+                <button id = "loginButton" onclick="login()">login</button>
+                <button id = "signoutButton" onclick= "signout()">signout</button>   
+            </div>
         </center>
         <div class = "chatBox">
             <center>
-            <div class = "chatTitle">
-                <h1 id = "welcome">Welcome to this chat</h1>
-                <h1 id = "welcomeUser">Welcome</h1>
-            </div>  
+                <div class = "chatTitle">
+                    <h1 id = "welcome">Welcome to this chat</h1>
+                    <h1 id = "welcomeUser">Welcome</h1>
+                </div>  
             </center>  
             <div>
                 <div id = "displayText"></div>
@@ -44,7 +44,7 @@
                     storageBucket: "",
                     messagingSenderId: "962409650011"
                 };
-                firebase.initializeApp(config);
+            firebase.initializeApp(config);
             
             //get all the dummy nodes from html
             const displayText = document.getElementById('displayText');
@@ -200,7 +200,7 @@
                     }
                 },10)
             })
-</script>
-<script src = "./vendor/js/displayMessage.js"></script>
+        </script>
+        <script src = "./vendor/js/displayMessage.js"></script>
     </body>
 </html>
